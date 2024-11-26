@@ -44,28 +44,33 @@ do
 done
 
 if [[ $SOCKS = "on" ]]; then
-    SOCKS_CMD="microsocks "
-    
-    if [[ $SOCKS_LOGS = "false" ]]; then
-        SOCKS_CMD+="-q "
+    SOCKS_CMD="hev-socks5-server /expressvpn/socks_config.yml"
+
+    if [[ -n "$SOCKS_WORKERS" && "$SOCKS_WORKERS" != 4 ]]; then
+        sed -i "s/  workers: 4/  workers: $SOCKS_WORKERS/" /expressvpn/socks_config.yml
     fi
     
-    if [[ -n "$SOCKS_USER" && -z "$SOCKS_PASS" ]] || [[ -z "$SOCKS_USER" && -n "$SOCKS_PASS" ]]; then
-        echo "Error: Both SOCKS_USER and SOCKS_PASS must be set, or neither."
-        exit
-    elif [[ -n "$SOCKS_USER" && -n "$SOCKS_PASS" ]]; then
-        
-        if [[ $SOCKS_AUTH_ONCE = "true" ]]; then
-            SOCKS_CMD+="-1 "
-        fi
-        
-        if [[ $SOCKS_WHITELIST != "" ]]; then
-            SOCKS_CMD+="-w $SOCKS_WHITELIST "
-        fi
-        
-        SOCKS_CMD+="-u $SOCKS_USER -P $SOCKS_PASS "
+    if [[ -n "$SOCKS_PORT" && "$SOCKS_PORT" != 1080 ]]; then
+        sed -i "s/  port: 1080/  port: $SOCKS_PORT/" /expressvpn/socks_config.yml
     fi
-    SOCKS_CMD+="-i $SOCKS_IP -p $SOCKS_PORT"
+
+    if [[ -n "$SOCKS_IP" && "$SOCKS_IP" != '::' ]]; then
+        sed -i "s/  listen-address: '::'/  listen-address: $SOCKS_IP/" /expressvpn/socks_config.yml
+    fi
+
+    if [[ -n "$SOCKS_AUTH" ]]; then
+        sed -i "s/#auth:/auth:/" /expressvpn/socks_config.yml
+        sed -i "s/#  username:/  username: $(echo $SOCKS_AUTH | cut -d ':' -f 1)/" /expressvpn/socks_config.yml
+        sed -i "s/#  password:/  password: $(echo $SOCKS_AUTH | cut -d ':' -f 2)/" /expressvpn/socks_config.yml
+    fi
+
+    if [[ -n "$SOCKS_LOGS_LEVEL" && "$SOCKS_LOGS_LEVEL" != 'warn' ]]; then
+        sed -i "s/#  log-level: warn/  log-level: $SOCKS_LOGS_LEVEL/" /expressvpn/socks_config.yml
+    fi
+
+    cat /expressvpn/socks_config.yml
+
+    
     $SOCKS_CMD &
 fi
 

@@ -11,13 +11,11 @@ ENV PROTOCOL="lightway_udp"
 ENV CIPHER="chacha20"
 
 ENV SOCKS="off"
-ENV SOCKS_LOGS="true"
-ENV SOCKS_AUTH_ONCE="false"
-ENV SOCKS_USER=""
-ENV SOCKS_PASS=""
+ENV SOCKS_LOGS_LEVEL="warn"
+ENV SOCKS_AUTH=""
 ENV SOCKS_IP="0.0.0.0"
 ENV SOCKS_PORT="1080"
-ENV SOCKS_WHITELIST=""
+ENV SOCKS_WORKERS="4"
 
 ARG NUM
 ARG PLATFORM
@@ -28,9 +26,9 @@ COPY files/ /expressvpn/
 RUN apt update && apt install -y --no-install-recommends \
     expect curl ca-certificates iproute2 wget jq iptables iputils-ping net-tools build-essential git
 
-RUN git clone https://github.com/rofl0r/microsocks.git && cd microsocks && make && \
-    cp /microsocks/microsocks /usr/local/bin/microsocks && \
-    rm -rf /microsocks
+RUN git clone --recursive https://github.com/heiher/hev-socks5-server && cd hev-socks5-server && make && \
+    cp /hev-socks5-server/bin/hev-socks5-server /usr/local/bin/hev-socks5-server && \
+    rm -rf /hev-socks5-server
 
 RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
     dpkg --add-architecture armhf \
